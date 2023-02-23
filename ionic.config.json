@@ -1,0 +1,7 @@
+{
+  "name": "BrickSort",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
