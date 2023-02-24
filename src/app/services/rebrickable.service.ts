@@ -1,21 +1,39 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of, Subscription, take } from 'rxjs';
+import { catchError, Observable, of, Subscription, take } from 'rxjs';
 import { SetInventoryPage } from '../models/setInventory';
-import { REBRICKABLE_API_KEY } from 'src/secrets';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RebrickableService {
 
+  private readonly localStorageKeyForApiKey = 'rebrickableApiKey';
   private headers: HttpHeaders;
   private currentSubscription?: Subscription;
+  private apiKey: string | null = null;
 
   constructor(private http: HttpClient) {
+    const key = localStorage.getItem(this.localStorageKeyForApiKey);
+    if (key) {
+      this.setApiKey(key);
+    }
+  }
+
+  hasApiKey(): boolean {
+    return this.apiKey !== null;
+  }
+
+  setApiKey(key: string) {
+    this.apiKey = key;
     this.headers = new HttpHeaders({
-      'Authorization': `key ${REBRICKABLE_API_KEY}`
+      'Authorization': `key ${key}`
     });
+    localStorage.setItem(this.localStorageKeyForApiKey, key);
+  }
+
+  private getLocalStorageKeyForSetAndPage(setNumber: string, pageNumber: number): string {
+    return `set${setNumber}_page${pageNumber}`;
   }
 
   sanitizeSetNumber(setNumber: string): string {
@@ -29,7 +47,7 @@ export class RebrickableService {
     return `https://rebrickable.com/api/v3/lego/sets/${this.sanitizeSetNumber(setNumber)}/parts/?page=${pageNumber}`;
   }
 
-  getSetInventoryPage(setNumber: string, pageNumber: number): Observable<SetInventoryPage> {
+  getSetInventoryPage(setNumber: string, pageNumber: number): Observable<SetInventoryPage | HttpErrorResponse | null> {
     // If currentSubscription is something else, we can unsubscribe from that
     if (this.currentSubscription) {
       this.currentSubscription.unsubscribe();
@@ -37,7 +55,7 @@ export class RebrickableService {
 
     setNumber = this.sanitizeSetNumber(setNumber);
 
-    const idForSetAndPage = `set${setNumber}_page${pageNumber}`;
+    const idForSetAndPage = this.getLocalStorageKeyForSetAndPage(setNumber, pageNumber);
     const partsFromCache = localStorage.getItem(idForSetAndPage);
 
     if (partsFromCache) {
@@ -49,9 +67,15 @@ export class RebrickableService {
       const pageObservable = this.http.get<SetInventoryPage>(url, { headers: this.headers });
 
       // I want to be able to unsubscribe from this later, so record it
-      this.currentSubscription = pageObservable.pipe(take(1)).subscribe(page => {
-        localStorage.setItem(idForSetAndPage, JSON.stringify(page));
-      });
+      this.currentSubscription = pageObservable
+        .pipe(take(1), catchError(error => of(error)))
+        .subscribe(page => {
+          if (page instanceof HttpErrorResponse || !page) {
+            return;
+          }
+
+          localStorage.setItem(idForSetAndPage, JSON.stringify(page));
+        });
 
       return pageObservable;
     }

@@ -1,5 +1,5 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title> <!--(click)="titleClick()">-->
       <!-- <span
         *ngIf="!searching"
@@ -21,13 +21,19 @@
         (search)="onSearch($event)">
       </ion-searchbar>
     </ion-title>
+
+    <ion-buttons slot="end">
+      <ion-button (click)="showApiKeyModal()">Set API Key</ion-button>
+    </ion-buttons>
+
+    <ion-progress-bar *ngIf="loading" color="success" type="indeterminate"></ion-progress-bar>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+  <!-- <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
     <ion-refresher-content></ion-refresher-content>
-  </ion-refresher>
+  </ion-refresher> -->
   
   <ion-header collapse="condense">
     <ion-toolbar>
@@ -42,6 +48,6 @@
   </ion-list>
 
   <p id="home-help" *ngIf="parts.length === 0">
-    {{helpText}}
+    {{getHelpText()}}
   </p>
 </ion-content>

@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { HomePage } from './home.page';
 import { HomePageRoutingModule } from './home-routing.module';
 import { PartItemComponentModule } from '../components/part-item/part-item.module';
+import { RebrickableApiKeyModalModule } from '../components/rebrickable-api-key-modal/rebrickable-api-key-modal.module';
 
 @NgModule({
     declarations: [HomePage],
@@ -14,7 +15,8 @@ import { PartItemComponentModule } from '../components/part-item/part-item.modul
         FormsModule,
         IonicModule,
         HomePageRoutingModule,
-        PartItemComponentModule
+        PartItemComponentModule,
+        RebrickableApiKeyModalModule
     ]
 })
 export class HomePageModule {}

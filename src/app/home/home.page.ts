@@ -1,6 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Animation, AnimationController, IonList, IonSearchbar, LoadingController, RefresherCustomEvent, ToastController } from '@ionic/angular';
-import { Subscription, take } from 'rxjs';
+import { Animation, AnimationController, IonList, IonSearchbar, ModalController, RefresherCustomEvent, ToastController } from '@ionic/angular';
+import { catchError, of, Subscription, take } from 'rxjs';
+import { RebrickableApiKeyModalComponent } from '../components/rebrickable-api-key-modal/rebrickable-api-key-modal.component';
 import { SetInventoryItem, SetInventoryPage } from '../models/setInventory';
 import { RebrickableService } from '../services/rebrickable.service';
 
@@ -20,9 +22,9 @@ export class HomePage implements OnInit, OnDestroy {
   public searching: boolean = true;
   public loading: boolean = false;
 
-  public readonly defaultSearchBarPlaceholder = 'Set number (i.e. 7965)';
-  public readonly defaultHelpText = 'Search for a set number in the above search bar!';
-  public helpText = this.defaultHelpText;
+  private readonly defaultSearchBarPlaceholder = 'Set number (i.e. 7965)';
+  private readonly defaultHelpText = 'Search for a set number in the above search bar!';
+
   public searchBarPlaceholder = this.defaultSearchBarPlaceholder;
 
   private inProgressPartList: SetInventoryItem[] = [];
@@ -37,24 +39,57 @@ export class HomePage implements OnInit, OnDestroy {
   constructor(
     private rebrickable: RebrickableService,
     private animationCtrl: AnimationController,
-    private loadingCtrl: LoadingController,
     private toastCtrl: ToastController,
+    private modalCtrl: ModalController,
     private changeDetectorRef: ChangeDetectorRef) {
   }
 
-  ngOnInit() {
+  getHelpText(): string {
+    if (!this.rebrickable.hasApiKey()) {
+      return 'To get started, hit the Set API Key button above to enter your Rebrickable.com API key.';
+    } else {
+      return this.defaultHelpText;
+    }
   }
 
-  async showLoading() {
-    const loading = await this.loadingCtrl.create({
-      message: `Loading parts for set ${this.setNumber}`,
+  async showApiKeyModal() {
+    const modal = await this.modalCtrl.create({
+      component: RebrickableApiKeyModalComponent,
     });
-    await loading.present();
+    modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+    if (role === 'save') {
+      this.rebrickable.setApiKey(data);
+    }
+  }
+
+  async ngOnInit() {
   }
 
   async showNoPartsFoundToast() {
     const toast = await this.toastCtrl.create({
       message: `Couldn't get inventory for set ${this.setNumber}; try another set number?`,
+      duration: 2000,
+      position: 'bottom'
+    });
+    await toast.present();
+  }
+
+  async showErrorToast(errorNumber: number) {
+    let message = '';
+
+    switch(errorNumber) {
+      case 400: message = `Internal error 400; something's wrong with the code.`; break;
+      case 401: message = `Invalid API key.`; break;
+      case 403: message = `Internal error 403! Couldn't download inventory for set ${this.setNumber}.`; break;
+      case 404: message = `Set ${this.setNumber} not found.`; break;
+      case 429: message = `Your requests to the Rebrickable.com API are being throttled! Slow down there!`; break;
+      default: message = 'Whats the deal with airline food amirite'; break;
+    }
+
+    const toast = await this.toastCtrl.create({
+      message,
       duration: 2000,
       position: 'bottom'
     });
@@ -122,51 +157,52 @@ export class HomePage implements OnInit, OnDestroy {
     const value = (event.target as HTMLInputElement).value;
     this.setNumber = value;
     if (value) {
-      await this.showLoading();
+      // We have a new set number; go and get the data.
+      this.loading = true;
 
       this.searchBarPlaceholder = value;
       this.recursivelyBuildPartsList(1);
     } else {
+      // No set number given; clear the list
       this.searchBarPlaceholder = this.defaultSearchBarPlaceholder;
       this.parts = [];
     }
   }
 
-  private recursivelyBuildPartsList(pageNumber: number, page?: SetInventoryPage) {
-    console.log(`page number ${pageNumber} for set number ${this.setNumber}`);
+  private recursivelyBuildPartsList(pageNumber: number, page?: SetInventoryPage | HttpErrorResponse | null) {
+    if (page instanceof HttpErrorResponse) {
+      // It's an error!
+      this.showErrorToast((page as HttpErrorResponse).status);
+      return;
+    }
 
     if (page) {
-      console.log(`pushing ${page.results.length} new parts to inProgressPartList`);
-
       this.inProgressPartList.push(...page.results);
     } else {
-      console.log('page was not!');
-
       this.inProgressPartList = [];
     }
 
     if (!page || page.next) {
-      console.log('trying to do a web request for the next page and then gonna subscribe');
-
       // If there's no current page (indicating that we're at the first one) or if there's a next
       // page, then grab it and recurse again.
       const page$ = this.rebrickable.getSetInventoryPage(this.setNumber, pageNumber);
-      const sub = page$
-        .pipe(take(1))
-        .subscribe(nextPage => this.recursivelyBuildPartsList(pageNumber + 1, nextPage));
-      this.subscriptions.push(sub);
+      const subscription = page$
+        .pipe(take(1), catchError(error => of(error)))
+        .subscribe(nextPage => {
+          this.recursivelyBuildPartsList(pageNumber + 1, nextPage);
+        });
+      this.subscriptions.push(subscription);
     } 
     else if (!page.next) {
-      console.log(`all ${this.parts.length} downloaded, yipee`);
-
       // There is no next page, so the list is done.
       this.parts = this.inProgressPartList;
 
-      this.loadingCtrl.dismiss();
       if (this.parts.length === 0) {
         // couldn't get inventory
         this.showNoPartsFoundToast();
       }
+
+      this.loading = false;
     }
   }
 
@@ -176,10 +212,10 @@ export class HomePage implements OnInit, OnDestroy {
     });
   }
 
-  refresh(ev: any) {
-    setTimeout(() => {
-      (ev as RefresherCustomEvent).detail.complete();
-    }, 3000);
-  }
+  // refresh(ev: any) {
+  //   setTimeout(() => {
+  //     (ev as RefresherCustomEvent).detail.complete();
+  //   }, 3000);
+  // }
 
 }
