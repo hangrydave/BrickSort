@@ -70,8 +70,8 @@ export class HomePage implements OnInit, OnDestroy {
   async showNoPartsFoundToast() {
     const toast = await this.toastCtrl.create({
       message: `Couldn't get inventory for set ${this.setNumber}; try another set number?`,
-      duration: 2000,
-      position: 'bottom'
+      duration: 1500,
+      position: 'top'
     });
     await toast.present();
   }
@@ -90,8 +90,8 @@ export class HomePage implements OnInit, OnDestroy {
 
     const toast = await this.toastCtrl.create({
       message,
-      duration: 2000,
-      position: 'bottom'
+      duration: 1500,
+      position: 'top'
     });
     await toast.present();
   }
