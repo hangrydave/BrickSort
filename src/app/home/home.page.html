@@ -1,7 +1,26 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Inbox
+    <ion-title (click)="titleClick()">
+      <span
+        *ngIf="!searching"
+        #titleText
+        id="title-text">
+        <span *ngIf="!setNumber">
+          Search for a set number
+        </span>
+
+        <span *ngIf="setNumber">
+          Parts for set <span id="set-number-button" fill="clear">{{setNumber}}</span>
+        </span>
+      </span>
+
+      <ion-searchbar
+        *ngIf="searching"
+        #searchBar
+        animated="true"
+        placeholder="Search for set number"
+        (search)="onSearch($event)">
+      </ion-searchbar>
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -14,12 +33,12 @@
   <ion-header collapse="condense">
     <ion-toolbar>
       <ion-title size="large">
-        Inbox
+        Parts
       </ion-title>
     </ion-toolbar>
   </ion-header>
   
   <ion-list>
-    <app-message *ngFor="let message of getMessages()" [message]="message"></app-message>
+    <app-part-item *ngFor="let part of this.parts" [part]="part"></app-part-item>
   </ion-list>
 </ion-content>

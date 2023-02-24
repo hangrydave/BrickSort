@@ -1,0 +1,41 @@
+.info {
+    color: #000000
+}
+
+ion-grid {
+    padding-left: 0;
+}
+
+ion-col {
+    padding-left: 0;
+}
+
+ion-img {
+    max-height: 70px;
+    height: 70px;
+
+    margin-left: 10px;
+}
+
+ion-item {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+}
+
+ion-label {
+    margin-top: 12px;
+    margin-bottom: 12px;
+    margin-left: 15px;
+}
+
+ion-item h2 {
+    font-weight: 600;
+    margin: 0;
+}
+
+ion-item p {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 95%;
+}
