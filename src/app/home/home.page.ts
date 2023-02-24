@@ -22,7 +22,7 @@ export class HomePage implements OnInit, OnDestroy {
   public searching: boolean = true;
   public loading: boolean = false;
 
-  private readonly defaultSearchBarPlaceholder = 'Set number (i.e. 7965)';
+  private readonly defaultSearchBarPlaceholder = 'Set number';
   private readonly defaultHelpText = 'Search for a set number in the above search bar!';
 
   public searchBarPlaceholder = this.defaultSearchBarPlaceholder;
