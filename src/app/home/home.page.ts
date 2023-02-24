@@ -76,7 +76,7 @@ export class HomePage implements OnInit, OnDestroy {
     await toast.present();
   }
 
-  async showErrorToast(errorNumber: number) {
+  async handleError(errorNumber: number) {
     let message = '';
 
     switch(errorNumber) {
@@ -172,7 +172,7 @@ export class HomePage implements OnInit, OnDestroy {
   private recursivelyBuildPartsList(pageNumber: number, page?: SetInventoryPage | HttpErrorResponse | null) {
     if (page instanceof HttpErrorResponse) {
       // It's an error!
-      this.showErrorToast((page as HttpErrorResponse).status);
+      this.handleError((page as HttpErrorResponse).status);
       return;
     }
 
