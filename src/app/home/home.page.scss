@@ -2,8 +2,16 @@
     color: var(--ion-color-primary);
 }
 
+#home-help {
+    height: 100%;
+    padding-top: 50%;
+    padding-bottom: 50%;
+    text-align: center;
+}
+
 ion-title {
     height: 60px;
+    background-color: var(--ion-color-primary, pink);
 }
 
 ion-searchbar {

@@ -37,7 +37,11 @@
     </ion-toolbar>
   </ion-header>
   
-  <ion-list>
+  <ion-list *ngIf="parts.length > 0">
     <app-part-item *ngFor="let part of this.parts" [part]="part"></app-part-item>
   </ion-list>
+
+  <p id="home-help" *ngIf="parts.length === 0">
+    {{helpText}}
+  </p>
 </ion-content>

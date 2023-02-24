@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Animation, AnimationController, IonList, IonSearchbar, RefresherCustomEvent } from '@ionic/angular';
+import { Animation, AnimationController, IonList, IonSearchbar, LoadingController, RefresherCustomEvent, ToastController } from '@ionic/angular';
 import { Subscription, take } from 'rxjs';
 import { SetInventoryItem, SetInventoryPage } from '../models/setInventory';
 import { RebrickableService } from '../services/rebrickable.service';
@@ -18,8 +18,11 @@ export class HomePage implements OnInit, OnDestroy {
   public setNumber: string;
   public parts: SetInventoryItem[] = [];
   public searching: boolean = true;
+  public loading: boolean = false;
 
-  public readonly defaultSearchBarPlaceholder = 'Search for set number';
+  public readonly defaultSearchBarPlaceholder = 'Set number (i.e. 7965)';
+  public readonly defaultHelpText = 'Search for a set number in the above search bar!';
+  public helpText = this.defaultHelpText;
   public searchBarPlaceholder = this.defaultSearchBarPlaceholder;
 
   private inProgressPartList: SetInventoryItem[] = [];
@@ -34,13 +37,31 @@ export class HomePage implements OnInit, OnDestroy {
   constructor(
     private rebrickable: RebrickableService,
     private animationCtrl: AnimationController,
+    private loadingCtrl: LoadingController,
+    private toastCtrl: ToastController,
     private changeDetectorRef: ChangeDetectorRef) {
   }
 
   ngOnInit() {
   }
 
-  public async titleClick() {
+  async showLoading() {
+    const loading = await this.loadingCtrl.create({
+      message: `Loading parts for set ${this.setNumber}`,
+    });
+    await loading.present();
+  }
+
+  async showNoPartsFoundToast() {
+    const toast = await this.toastCtrl.create({
+      message: `Couldn't get inventory for set ${this.setNumber}; try another set number?`,
+      duration: 2000,
+      position: 'bottom'
+    });
+    await toast.present();
+  }
+
+  async titleClick() {
     // TODO: figure out animations based on this
     // https://stackoverflow.com/questions/21853480/fade-out-element-completely-before-fading-another-in
 
@@ -72,7 +93,7 @@ export class HomePage implements OnInit, OnDestroy {
     this.ionSearchBar.setFocus();
   }
 
-  public async onSearch(event: Event) {
+  async onSearch(event: Event) {
     // if (!this.searchBarDisappear) {
     //   this.searchBarDisappear = this.animationCtrl.create()
     //     // .addElement(this.searchBarRef.nativeElement)
@@ -101,28 +122,51 @@ export class HomePage implements OnInit, OnDestroy {
     const value = (event.target as HTMLInputElement).value;
     this.setNumber = value;
     if (value) {
+      await this.showLoading();
+
       this.searchBarPlaceholder = value;
       this.recursivelyBuildPartsList(1);
     } else {
       this.searchBarPlaceholder = this.defaultSearchBarPlaceholder;
+      this.parts = [];
     }
   }
 
   private recursivelyBuildPartsList(pageNumber: number, page?: SetInventoryPage) {
+    console.log(`page number ${pageNumber} for set number ${this.setNumber}`);
+
     if (page) {
+      console.log(`pushing ${page.results.length} new parts to inProgressPartList`);
+
       this.inProgressPartList.push(...page.results);
     } else {
+      console.log('page was not!');
+
       this.inProgressPartList = [];
     }
 
     if (!page || page.next) {
+      console.log('trying to do a web request for the next page and then gonna subscribe');
+
       // If there's no current page (indicating that we're at the first one) or if there's a next
       // page, then grab it and recurse again.
       const page$ = this.rebrickable.getSetInventoryPage(this.setNumber, pageNumber);
-      this.subscriptions.push(page$.pipe(take(1)).subscribe(nextPage => this.recursivelyBuildPartsList(pageNumber + 1, nextPage)));
-    } else if (!page.next) {
+      const sub = page$
+        .pipe(take(1))
+        .subscribe(nextPage => this.recursivelyBuildPartsList(pageNumber + 1, nextPage));
+      this.subscriptions.push(sub);
+    } 
+    else if (!page.next) {
+      console.log(`all ${this.parts.length} downloaded, yipee`);
+
       // There is no next page, so the list is done.
       this.parts = this.inProgressPartList;
+
+      this.loadingCtrl.dismiss();
+      if (this.parts.length === 0) {
+        // couldn't get inventory
+        this.showNoPartsFoundToast();
+      }
     }
   }
 
