@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title (click)="titleClick()">
-      <span
+    <ion-title> <!--(click)="titleClick()">-->
+      <!-- <span
         *ngIf="!searching"
         #titleText
         id="title-text">
@@ -12,13 +12,12 @@
         <span *ngIf="setNumber">
           Parts for set <span id="set-number-button" fill="clear">{{setNumber}}</span>
         </span>
-      </span>
+      </span> -->
 
       <ion-searchbar
-        *ngIf="searching"
         #searchBar
         animated="true"
-        placeholder="Search for set number"
+        placeholder={{searchBarPlaceholder}}
         (search)="onSearch($event)">
       </ion-searchbar>
     </ion-title>

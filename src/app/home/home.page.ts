@@ -1,8 +1,7 @@
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Animation, AnimationController, IonList, IonSearchbar, RefresherCustomEvent } from '@ionic/angular';
-import { delay, Subscription, take } from 'rxjs';
+import { Subscription, take } from 'rxjs';
 import { SetInventoryItem, SetInventoryPage } from '../models/setInventory';
-import { DataService, Message } from '../services/data.service';
 import { RebrickableService } from '../services/rebrickable.service';
 
 @Component({
@@ -20,6 +19,9 @@ export class HomePage implements OnInit, OnDestroy {
   public parts: SetInventoryItem[] = [];
   public searching: boolean = true;
 
+  public readonly defaultSearchBarPlaceholder = 'Search for set number';
+  public searchBarPlaceholder = this.defaultSearchBarPlaceholder;
+
   private inProgressPartList: SetInventoryItem[] = [];
 
   private subscriptions: Subscription[] = [];
@@ -30,7 +32,6 @@ export class HomePage implements OnInit, OnDestroy {
   private searchBarAppear: Animation;
 
   constructor(
-    private data: DataService,
     private rebrickable: RebrickableService,
     private animationCtrl: AnimationController,
     private changeDetectorRef: ChangeDetectorRef) {
@@ -54,8 +55,8 @@ export class HomePage implements OnInit, OnDestroy {
     // this.titleTextDisappear = this.titleTextDisappear.addElement(this.titleTextRef.nativeElement);
     // await this.titleTextDisappear.play();
 
-    this.searching = true;
-    this.changeDetectorRef.detectChanges();
+    // this.searching = true;
+    // this.changeDetectorRef.detectChanges();
 
     // if (!this.searchBarAppear) {
     //   this.searchBarAppear = this.animationCtrl.create()
@@ -83,8 +84,8 @@ export class HomePage implements OnInit, OnDestroy {
     // this.searchBarDisappear = this.searchBarDisappear.addElement(this.searchBarRef.nativeElement);
     // await this.searchBarDisappear.play();
 
-    this.searching = false;
-    this.changeDetectorRef.detectChanges();
+    // this.searching = false;
+    // this.changeDetectorRef.detectChanges();
     
     // if (!this.titleTextAppear) {
     //   this.titleTextAppear = this.animationCtrl.create()
@@ -99,7 +100,12 @@ export class HomePage implements OnInit, OnDestroy {
 
     const value = (event.target as HTMLInputElement).value;
     this.setNumber = value;
-    this.recursivelyBuildPartsList(1);
+    if (value) {
+      this.searchBarPlaceholder = value;
+      this.recursivelyBuildPartsList(1);
+    } else {
+      this.searchBarPlaceholder = this.defaultSearchBarPlaceholder;
+    }
   }
 
   private recursivelyBuildPartsList(pageNumber: number, page?: SetInventoryPage) {
@@ -130,10 +136,6 @@ export class HomePage implements OnInit, OnDestroy {
     setTimeout(() => {
       (ev as RefresherCustomEvent).detail.complete();
     }, 3000);
-  }
-
-  getMessages(): Message[] {
-    return this.data.getMessages();
   }
 
 }

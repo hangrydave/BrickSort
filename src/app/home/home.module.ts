@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 
 import { HomePage } from './home.page';
 import { HomePageRoutingModule } from './home-routing.module';
-import { MessageComponentModule } from '../message/message.module';
 import { PartItemComponentModule } from '../components/part-item/part-item.module';
 
 @NgModule({
@@ -14,7 +13,6 @@ import { PartItemComponentModule } from '../components/part-item/part-item.modul
         CommonModule,
         FormsModule,
         IonicModule,
-        MessageComponentModule,
         HomePageRoutingModule,
         PartItemComponentModule
     ]
