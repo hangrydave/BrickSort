@@ -1,19 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
-    <ion-title> <!--(click)="titleClick()">-->
-      <!-- <span
-        *ngIf="!searching"
-        #titleText
-        id="title-text">
-        <span *ngIf="!setNumber">
-          Search for a set number
-        </span>
-
-        <span *ngIf="setNumber">
-          Parts for set <span id="set-number-button" fill="clear">{{setNumber}}</span>
-        </span>
-      </span> -->
-
+    <ion-title>
       <ion-searchbar
         #searchBar
         animated="true"
@@ -30,7 +17,10 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="false">
+
+  <bricksort-set-details *ngIf="setDetails" [setDetails]="setDetails"></bricksort-set-details>
+
   <!-- <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher> -->

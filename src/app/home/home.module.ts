@@ -7,6 +7,7 @@ import { HomePage } from './home.page';
 import { HomePageRoutingModule } from './home-routing.module';
 import { PartItemComponentModule } from '../components/part-item/part-item.module';
 import { RebrickableApiKeyModalModule } from '../components/rebrickable-api-key-modal/rebrickable-api-key-modal.module';
+import { SetDetailsModule } from '../components/set-details/set-details.module';
 
 @NgModule({
     declarations: [HomePage],
@@ -16,7 +17,8 @@ import { RebrickableApiKeyModalModule } from '../components/rebrickable-api-key-
         IonicModule,
         HomePageRoutingModule,
         PartItemComponentModule,
-        RebrickableApiKeyModalModule
+        RebrickableApiKeyModalModule,
+        SetDetailsModule
     ]
 })
 export class HomePageModule {}

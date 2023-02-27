@@ -1,16 +1,13 @@
 <ion-item *ngIf="part">
   <ion-img src="{{part.part.part_img_url}}"></ion-img>
   <ion-label class="ion-text-wrap">
-    <h2>
-      {{ part.part.name }}
-    </h2>
-
+    <h2>{{ part.part.name }}</h2>
     <p>
       <ion-grid>
         <ion-row>
           <ion-col class="labels" size="auto">
-            <h3>Quantity:</h3>
-            <h3>Color:</h3>
+            <h3>Quantity: </h3>
+            <h3>Color: </h3>
           </ion-col>
           <ion-col color="dark" size="auto">
             <h3>{{part.quantity}}</h3>
